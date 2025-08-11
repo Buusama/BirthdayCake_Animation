@@ -11,10 +11,6 @@ export default function Cake() {
   // Create calendar for August 2025
   const createCalendar = () => {
     const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-    const today = new Date();
-    const currentDate = today.getDate();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
 
     // August 2025 (month 7 in JavaScript as it's 0-indexed)
     const targetMonth = 7; // August
