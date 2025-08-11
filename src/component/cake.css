@@ -1672,13 +1672,11 @@ body::after {
 
   .birthday-message {
     margin: 15px 5px !important;
-    transform: translateX(30px) !important;
     padding: 10px 15px !important;
     font-size: 14px !important;
   }
 
   .blow-instruction {
-    transform: translateX(30px) !important;
     margin: 8px 0 !important;
   }
 
@@ -1688,102 +1686,7 @@ body::after {
   }
 }
 
-/* Mobile cake positioning adjustments */
-@media screen and (max-width: 768px) {
-  .scene {
-    transform: translateX(20px);
-    margin: 20px 0;
-  }
 
-  .cake-3d {
-    transform: translateX(15px) rotateY(-5deg) rotateX(30deg);
-    animation: mobileCakeRotation 12s ease-in-out infinite;
-  }
-
-  .birthday-message {
-    margin: 30px 20px;
-    transform: translateX(15px);
-  }
-
-  .blow-instruction {
-    transform: translateX(15px);
-  }
-}
-
-@media screen and (max-width: 480px) {
-  .scene {
-    transform: translateX(25px);
-    margin: 15px 0;
-  }
-
-  .cake-3d {
-    transform: translateX(20px) rotateY(-5deg) rotateX(30deg);
-    animation: mobileCakeRotation 12s ease-in-out infinite;
-  }
-
-  .birthday-message {
-    margin: 25px 15px;
-    transform: translateX(20px);
-    padding: 15px 25px;
-  }
-
-  .blow-instruction {
-    transform: translateX(20px);
-    margin: 15px 0;
-  }
-}
-
-@media screen and (max-width: 360px) {
-  .scene {
-    transform: translateX(30px);
-    margin: 10px 0;
-  }
-
-  .cake-3d {
-    transform: translateX(25px) rotateY(-5deg) rotateX(30deg);
-    animation: mobileCakeRotation 15s ease-in-out infinite;
-  }
-
-  .birthday-message {
-    margin: 20px 10px;
-    transform: translateX(25px);
-    padding: 12px 20px;
-    font-size: clamp(1rem, 3vw, 1.5rem);
-  }
-
-  .blow-instruction {
-    transform: translateX(25px);
-    margin: 10px 0;
-  }
-
-  .blow-instruction p {
-    font-size: 13px;
-    padding: 8px 15px;
-  }
-}
-
-/* Mobile cake animation with offset position */
-@keyframes mobileCakeRotation {
-  0% {
-    transform: translateX(15px) rotateY(-5deg) rotateX(30deg);
-  }
-
-  25% {
-    transform: translateX(15px) rotateY(0deg) rotateX(25deg);
-  }
-
-  50% {
-    transform: translateX(15px) rotateY(5deg) rotateX(35deg);
-  }
-
-  75% {
-    transform: translateX(15px) rotateY(0deg) rotateX(30deg);
-  }
-
-  100% {
-    transform: translateX(15px) rotateY(-5deg) rotateX(30deg);
-  }
-}
 
 /* Mobile-optimized animations */
 @keyframes mobileBackgroundShift {
