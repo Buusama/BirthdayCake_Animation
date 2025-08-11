@@ -1,79 +1,78 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import '../component/cake.css';
 
-function Candle({ left, top, out }) {
-  return (
-    <div>
-      <div>
-        <motion.div
-          className="candle"
-          style={{ left: `${left}px`, top: `${top}px` }}
-          animate={{ y: 0 }}
-          initial={{ y: -100 }}
-          transition={{ duration: 0.5, ease: "easeInOut", delay: 0.5 }}
-        >
-          {!out && (
-            <div className="flame">
-              <motion.div
-                animate={{ y: 0 }}
-                initial={{ opacity: 0 }}
-                transition={{ duration: 0.5, ease: "easeInOut", delay: 1.5 }}
-              />
-            </div>
-          )}
-        </motion.div>
-      </div>
-    </div>
-  );
-}
-
 export default function Cake() {
-  const [blowing, setBlowing] = useState();
-  const dripRef = useRef(null);
-  const [candles, setCandles] = useState([]);
-  const [temp, setTemp] = useState("");
+  const [calendar, setCalendar] = useState([]);
+  const [blowing, setBlowing] = useState(false);
+  const [candlesOut, setCandlesOut] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  // Create calendar for August 2025
+  const createCalendar = () => {
+    const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    const today = new Date();
+    const currentDate = today.getDate();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    // August 2025 (month 7 in JavaScript as it's 0-indexed)
+    const targetMonth = 7; // August
+    const targetYear = 2025;
+
+    const calendarData = [];
+
+    // Add header for days of week
+    daysOfWeek.forEach(day => {
+      calendarData.push({ type: 'header', content: day });
+    });
+
+    // Get first day of August 2025
+    const firstDay = new Date(targetYear, targetMonth, 1);
+    const lastDay = new Date(targetYear, targetMonth + 1, 0);
+    const startingDayOfWeek = firstDay.getDay();
+    const daysInMonth = lastDay.getDate();
+
+    // Add empty cells for days before the 1st
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      calendarData.push({ type: 'empty', content: '' });
+    }
+
+    // Add days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const isSpecialDay = day === 13; // Mark day 13 as special
+      calendarData.push({
+        type: 'date',
+        content: day,
+        isSpecialDay
+      });
+    }
+
+    setCalendar(calendarData);
+  };
 
   useEffect(() => {
-    if (!blowing) return;
-    let timeout = setTimeout(() => {
-      setBlowing(false);
-    }, 200);
+    createCalendar();
+  }, []);
 
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [blowing]);
-
-  useEffect(() => {
-    if (!blowing) return;
-    setCandles((prevCandles) =>
-      prevCandles.map((candle) => ({
-        ...candle,
-        out: candle.out ? true : Math.random() < 0.05,
-      }))
-    );
-  }, [blowing]);
-
+  // Microphone access and blow detection
   useEffect(() => {
     let isMounted = true;
 
     navigator.mediaDevices
       .getUserMedia({ audio: true })
       .then((stream) => {
-        if (!isMounted) return; // Check if the component is still mounted
+        if (!isMounted) return;
 
         const audioContext = new AudioContext();
         const analyzer = audioContext.createAnalyser();
         const microphone = audioContext.createMediaStreamSource(stream);
         const scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
 
-        // Connect the microphone to the Analyzer
         microphone.connect(analyzer);
         analyzer.connect(scriptProcessor);
         scriptProcessor.connect(audioContext.destination);
 
-        // Define the loudness threshold
         const loudnessThreshold = 50;
 
         scriptProcessor.addEventListener('audioprocess', () => {
@@ -85,70 +84,145 @@ export default function Cake() {
           }
           const avg = sum / array.length;
 
-          // Check if the average volume exceeds the loudness threshold
-          if (avg > loudnessThreshold && isMounted) {
-            console.log('Loud sound detected');
-            setBlowing(Date.now());
+          if (avg > loudnessThreshold && isMounted && !candlesOut) {
+            setBlowing(true);
+            setTimeout(() => {
+              setCandlesOut(true);
+              setShowCelebration(true);
+            }, 500);
           }
         });
       })
       .catch((err) => {
         console.log(err);
-        alert("You need to allow microphone to access this site")
-        setTemp("ldsfl")
+        alert("Bạn cần cho phép truy cập microphone để thổi nến!");
       });
 
-    // Cleanup function to handle unmounting
     return () => {
       isMounted = false;
     };
-  }, [temp]);
+  }, [candlesOut]);
+
+  const resetCake = () => {
+    setCandlesOut(false);
+    setShowCelebration(false);
+    setBlowing(false);
+  };
 
   return (
-    <div>
-      <h1 className='heading'>Please click on cake to add Candles</h1>
-      <div className='input'>
-        <input
-          disabled
-          value={candles.filter((candle) => !candle.out).length}
-          placeholder='Place candles to start...'
-        />
-      </div>
-      <div className="cake" onClick={(event) => {
-        if (!dripRef.current) return;
-        const rect = dripRef.current.getBoundingClientRect();
-        setCandles([
-          ...candles,
-          {
-            left: event.clientX - rect.left,
-            top: -10 + Math.floor(30 * Math.random()),
-            out: false,
-          }
-        ])
-      }}>
-        <div className="plate"></div>
-        <div className="layer layer-bottom"></div>
-        <div className="layer layer-middle"></div>
-        <div className="layer layer-top"></div>
-        <div className="icing">
-          <div ref={dripRef}>
-            <div>
-              {candles.map((candle, i) => (
-                <Candle
-                  key={i}
-                  left={candle.left}
-                  top={candle.top}
-                  out={candle.out}
-                />
-              ))}
+    <div className="cake-app">
+      {/* Blow instruction */}
+      {!candlesOut && (
+        <div className="blow-instruction">
+          <p>🎂 Thổi mạnh vào micro để tắt nến sinh nhật! 💨</p>
+        </div>
+      )}
+      {/* Reset button */}
+      {candlesOut && (
+        <button className="reset-btn" onClick={resetCake}>
+          🔄 Thắp nến lại
+        </button>
+      )}
+      <h1 className='heading'>Linh Mẩu sinh nhật vui vẻ</h1>
+
+      <br></br>
+
+
+
+      <div className="scene">
+        <motion.div
+          className="cake-3d"
+          initial={{ rotateY: 0, rotateX: 30 }}
+          animate={{ rotateY: [-5, 0, 5, 0, -5], rotateX: [30, 25, 35, 30, 30] }}
+          transition={{ duration: 12, ease: "easeInOut", repeat: Infinity }}
+        >
+          {/* Plate */}
+          <div className="plate-3d"></div>
+
+          {/* Cake bottom */}
+          <div className="cake-bottom-3d"></div>
+
+
+
+          {/* Cake top with calendar */}
+          <div className="cake-top-3d">
+            <div className="calendar-content">
+              {/* Number candles 2 and 5 */}
+              <div className="number-candles">
+                {/* Number 2 Candle */}
+                <div className="number-candle number-2">
+                  {!candlesOut && (
+                    <motion.div
+                      className="candle-flame"
+                      animate={blowing ? { scale: [1, 0.8, 0.6, 0] } : {}}
+                      transition={{ duration: 0.5 }}
+                    />
+                  )}
+                  <div className="candle-wick"></div>
+                  <div className="number-segments">
+                    <div className="segment top-horizontal"></div>
+                    <div className="segment middle-horizontal"></div>
+                    <div className="segment bottom-horizontal"></div>
+                    <div className="segment right-vertical-top"></div>
+                    <div className="segment left-vertical-bottom"></div>
+                  </div>
+                </div>
+
+                {/* Number 5 Candle */}
+                <div className="number-candle number-5">
+                  {!candlesOut && (
+                    <motion.div
+                      className="candle-flame"
+                      animate={blowing ? { scale: [1, 0.8, 0.6, 0] } : {}}
+                      transition={{ duration: 0.5, delay: 0.2 }}
+                    />
+                  )}
+                  <div className="candle-wick"></div>
+                  <div className="number-segments">
+                    <div className="segment top-horizontal"></div>
+                    <div className="segment middle-horizontal"></div>
+                    <div className="segment bottom-horizontal"></div>
+                    <div className="segment left-vertical-top"></div>
+                    <div className="segment right-vertical-bottom"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="calendar-grid">
+                {calendar.map((item, index) => (
+                  <div
+                    key={index}
+                    className={`calendar-day ${item.type} ${item.isToday ? 'today' : ''} ${item.isSpecialDay ? 'special-day' : ''}`}
+                  >
+                    {item.content}
+                  </div>
+                ))}
+              </div>
+              <div className="birthday-text">Tháng 8</div>
             </div>
           </div>
-        </div>
-        <div className="drip drip1"></div>
-        <div className="drip drip2"></div>
-        <div className="drip drip3"></div>
+
+
+        </motion.div>
       </div>
-      {candles?.length > 0 && <h3 className='heading' style={{ marginTop: "32%" }}>Give a strong blow to blow out the candles on the birthday cake</h3>}
+
+      {/* Celebration Modal */}
+      {showCelebration && (
+        <motion.div
+          className="celebration"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          onClick={() => setShowCelebration(false)}
+        >
+          <div className="celebration-content">
+            <h2>🎉 Chúc Mừng Sinh Nhật! 🎂</h2>
+            <p className="confetti">🎊 🎈 🎁 🌟 ✨</p>
+            <p>Chúc Linh Mẩu tuổi mới nhiều sức khỏe, hạnh phúc và thành công!</p>
+            <p>Mong tất cả những ước mơ của cậu sẽ trở thành hiện thực! 💫</p>
+            <p className="click-hint">Nhấn vào đây để đóng</p>
+          </div>
+        </motion.div>
+      )}
+
     </div>
   );
 }
