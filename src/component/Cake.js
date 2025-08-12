@@ -8,6 +8,7 @@ export default function Cake() {
   const [candlesOut, setCandlesOut] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [audioInitialized, setAudioInitialized] = useState(false);
+  const [showCard, setShowCard] = useState(true);
   const audioRef = useRef(null);
 
   // Create calendar for August 2025
@@ -203,6 +204,13 @@ export default function Cake() {
     };
   }, [candlesOut]);
 
+  const handleCardClick = () => {
+    // Initialize audio for iOS compatibility
+    initializeAudio();
+    // Hide card and show cake
+    setShowCard(false);
+  };
+
   const resetCake = () => {
     // Stop music when resetting
     if (audioRef.current) {
@@ -217,124 +225,169 @@ export default function Cake() {
   };
 
   return (
-    <div className="cake-app" onClick={initializeAudio}>
-      {/* Blow instruction */}
-      {!candlesOut && (
-        <div className="blow-instruction">
-          <p>🎂 Thổi mạnh vào micro để tắt nến sinh nhật! 💨</p>
-          {!audioInitialized && (
-            <p style={{ fontSize: '12px', opacity: 0.7 }}>
-              (Nhấn vào màn hình để kích hoạt âm thanh trên iOS)
-            </p>
-          )}
-        </div>
-      )}
-      {/* Reset button */}
-      {candlesOut && (
-        <button className="reset-btn" onClick={resetCake}>
-          🔄 Thắp nến lại
-        </button>
-      )}
-      <h1 className='heading'>Linh Mẩu sinh nhật vui vẻ</h1>
-
-      <br></br>
-
-
-
-      <div className="scene">
+    <div className="cake-app">
+      {showCard ? (
+        /* Birthday Card */
         <motion.div
-          className="cake-3d"
-          initial={{ rotateY: 0, rotateX: 30 }}
-          animate={{ rotateY: [-5, 0, 5, 0, -5], rotateX: [30, 25, 35, 30, 30] }}
-          transition={{ duration: 12, ease: "easeInOut", repeat: Infinity }}
+          className="birthday-card"
+          initial={{ opacity: 0, scale: 0.8, rotateY: -10 }}
+          animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          onClick={handleCardClick}
         >
-          {/* Plate */}
-          <div className="plate-3d"></div>
+          <div className="card-front">
+            <div className="card-header">
+              <h2>🎉 Thiệp Sinh Nhật 🎉</h2>
+            </div>
 
-          {/* Cake bottom */}
-          <div className="cake-bottom-3d"></div>
+            <div className="card-content">
+              <div className="birthday-message">
+                <h3>Chúc Mừng Sinh Nhật</h3>
+                <h2 className="birthday-name">Hoàng Linh</h2>
 
-
-
-          {/* Cake top with calendar */}
-          <div className="cake-top-3d">
-            <div className="calendar-content">
-              {/* Number candles 2 and 5 */}
-              <div className="number-candles">
-                {/* Number 2 Candle */}
-                <div className="number-candle number-2">
-                  {!candlesOut && (
-                    <motion.div
-                      className="candle-flame"
-                      animate={blowing ? { scale: [1, 0.8, 0.6, 0] } : {}}
-                      transition={{ duration: 0.5 }}
-                    />
-                  )}
-                  <div className="candle-wick"></div>
-                  <div className="number-segments">
-                    <div className="segment top-horizontal"></div>
-                    <div className="segment middle-horizontal"></div>
-                    <div className="segment bottom-horizontal"></div>
-                    <div className="segment right-vertical-top"></div>
-                    <div className="segment left-vertical-bottom"></div>
-                  </div>
-                </div>
-
-                {/* Number 5 Candle */}
-                <div className="number-candle number-5">
-                  {!candlesOut && (
-                    <motion.div
-                      className="candle-flame"
-                      animate={blowing ? { scale: [1, 0.8, 0.6, 0] } : {}}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                    />
-                  )}
-                  <div className="candle-wick"></div>
-                  <div className="number-segments">
-                    <div className="segment top-horizontal"></div>
-                    <div className="segment middle-horizontal"></div>
-                    <div className="segment bottom-horizontal"></div>
-                    <div className="segment left-vertical-top"></div>
-                    <div className="segment right-vertical-bottom"></div>
-                  </div>
+                <div className="birthday-date">
+                  <p>📅 13 Tháng 8, 2025</p>
                 </div>
               </div>
-              <div className="calendar-grid">
-                {calendar.map((item, index) => (
-                  <div
-                    key={index}
-                    className={`calendar-day ${item.type} ${item.isToday ? 'today' : ''} ${item.isSpecialDay ? 'special-day' : ''}`}
-                  >
-                    {item.content}
-                  </div>
-                ))}
+
+              <div className="card-decorations">
+                <div className="floating-emoji">🎈</div>
+                <div className="floating-emoji">🎊</div>
+                <div className="floating-emoji">🎂</div>
+                <div className="floating-emoji">🌟</div>
+                <div className="floating-emoji">✨</div>
               </div>
-              <div className="birthday-text">Tháng 8</div>
+            </div>
+
+            <div className="card-footer">
+              <motion.p
+                className="click-instruction"
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                👆 Nhấn vào thiệp để mở quà sinh nhật! 🎁
+              </motion.p>
             </div>
           </div>
-
-
         </motion.div>
-      </div>
-
-      {/* Celebration Modal */}
-      {showCelebration && (
+      ) : (
+        /* Cake Scene */
         <motion.div
-          className="celebration"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          onClick={() => setShowCelebration(false)}
+          transition={{ duration: 0.8 }}
         >
-          <div className="celebration-content">
-            <h2>🎉 Chúc Mừng Sinh Nhật! 🎂</h2>
-            <p className="confetti">🎊 🎈 🎁 🌟 ✨</p>
-            <p>Chúc Mẩu tuổi mới nhiều sức khỏe, hạnh phúc và thành công!</p>
-            <p>Mong tất cả những ước mơ của cậu sẽ trở thành hiện thực! 💫</p>
-            <p className="click-hint">Nhấn vào đây để đóng</p>
+          {/* Blow instruction */}
+          {!candlesOut && (
+            <div className="blow-instruction">
+              <p>🎂 Thổi mạnh vào micro để tắt nến sinh nhật! 💨</p>
+            </div>
+          )}
+          {/* Reset button */}
+          {candlesOut && (
+            <button className="reset-btn" onClick={resetCake}>
+              🔄 Thắp nến lại
+            </button>
+          )}
+          <h1 className='heading'>Linh Mẩu sinh nhật vui vẻ</h1>
+
+          <br></br>
+
+          <div className="scene">
+            <motion.div
+              className="cake-3d"
+              initial={{ rotateY: 0, rotateX: 30 }}
+              animate={{ rotateY: [-5, 0, 5, 0, -5], rotateX: [30, 25, 35, 30, 30] }}
+              transition={{ duration: 12, ease: "easeInOut", repeat: Infinity }}
+            >
+              {/* Plate */}
+              <div className="plate-3d"></div>
+
+              {/* Cake bottom */}
+              <div className="cake-bottom-3d"></div>
+
+
+
+              {/* Cake top with calendar */}
+              <div className="cake-top-3d">
+                <div className="calendar-content">
+                  {/* Number candles 2 and 5 */}
+                  <div className="number-candles">
+                    {/* Number 2 Candle */}
+                    <div className="number-candle number-2">
+                      {!candlesOut && (
+                        <motion.div
+                          className="candle-flame"
+                          animate={blowing ? { scale: [1, 0.8, 0.6, 0] } : {}}
+                          transition={{ duration: 0.5 }}
+                        />
+                      )}
+                      <div className="candle-wick"></div>
+                      <div className="number-segments">
+                        <div className="segment top-horizontal"></div>
+                        <div className="segment middle-horizontal"></div>
+                        <div className="segment bottom-horizontal"></div>
+                        <div className="segment right-vertical-top"></div>
+                        <div className="segment left-vertical-bottom"></div>
+                      </div>
+                    </div>
+
+                    {/* Number 5 Candle */}
+                    <div className="number-candle number-5">
+                      {!candlesOut && (
+                        <motion.div
+                          className="candle-flame"
+                          animate={blowing ? { scale: [1, 0.8, 0.6, 0] } : {}}
+                          transition={{ duration: 0.5, delay: 0.2 }}
+                        />
+                      )}
+                      <div className="candle-wick"></div>
+                      <div className="number-segments">
+                        <div className="segment top-horizontal"></div>
+                        <div className="segment middle-horizontal"></div>
+                        <div className="segment bottom-horizontal"></div>
+                        <div className="segment left-vertical-top"></div>
+                        <div className="segment right-vertical-bottom"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="calendar-grid">
+                    {calendar.map((item, index) => (
+                      <div
+                        key={index}
+                        className={`calendar-day ${item.type} ${item.isToday ? 'today' : ''} ${item.isSpecialDay ? 'special-day' : ''}`}
+                      >
+                        {item.content}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="birthday-text">Tháng 8</div>
+                </div>
+              </div>
+
+
+            </motion.div>
           </div>
+
+          {/* Celebration Modal */}
+          {showCelebration && (
+            <motion.div
+              className="celebration"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              onClick={() => setShowCelebration(false)}
+            >
+              <div className="celebration-content">
+                <h2>🎉 Chúc Mừng Sinh Nhật! 🎂</h2>
+                <p className="confetti">🎊 🎈 🎁 🌟 ✨</p>
+                <p>Chúc Linh Mẩu tuổi mới nhiều sức khỏe, hạnh phúc và thành công!</p>
+                <p>Mong tất cả những ước mơ của cậu sẽ trở thành hiện thực! 💫</p>
+                <p className="click-hint">Nhấn vào đây để đóng</p>
+              </div>
+            </motion.div>
+          )}
         </motion.div>
       )}
-
     </div>
   );
 }
