@@ -126,15 +126,49 @@ export default function Cake() {
         audioRef.current.currentTime = 0;
       }
 
-      // Create new audio instance
-      const audio = new Audio('/music.mp3');
-      audioRef.current = audio;
+            // Try multiple audio paths until one works
+      const audioPaths = [
+        `${process.env.PUBLIC_URL || ''}/music.mp3`,
+        '/music.mp3',
+        './music.mp3',
+        `${window.location.origin}/music.mp3`,
+        // Fallback to a simple beep sound using data URI
+        'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCEOX2+zNfCgELIHO8diJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCEOX2+zNfCgELIHO8diJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCEOX2+zNfCgELIHO8diJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmcfCEOX2+zNfCgE'
+      ];
 
-      audio.currentTime = 4; // Skip first 4 seconds
-      audio.volume = 0.5; // Set volume to 50%
-      audio.play().catch(error => {
-        console.log('Could not play music:', error);
-      });
+      const tryPlayAudio = (pathIndex = 0) => {
+        if (pathIndex >= audioPaths.length) {
+          console.log('❌ All audio paths failed');
+          return;
+        }
+
+        const currentPath = audioPaths[pathIndex];
+        console.log(`🎵 Trying audio path ${pathIndex + 1}/${audioPaths.length}:`, currentPath);
+        
+        const audio = new Audio(currentPath);
+        audioRef.current = audio;
+
+        const onSuccess = () => {
+          console.log('✅ Audio loaded successfully:', currentPath);
+          audio.currentTime = currentPath.includes('data:') ? 0 : 4; // Skip 4s for file, not for beep
+          audio.volume = 0.5;
+          audio.play().catch(playError => {
+            console.log('❌ Play error, trying next path:', playError);
+            tryPlayAudio(pathIndex + 1);
+          });
+        };
+
+        const onError = () => {
+          console.log(`❌ Failed to load: ${currentPath}, trying next...`);
+          tryPlayAudio(pathIndex + 1);
+        };
+
+        audio.addEventListener('canplaythrough', onSuccess);
+        audio.addEventListener('error', onError);
+        audio.load();
+      };
+
+      tryPlayAudio();
     } catch (error) {
       console.log('Error creating audio:', error);
     }
