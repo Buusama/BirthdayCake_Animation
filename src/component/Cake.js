@@ -126,15 +126,24 @@ export default function Cake() {
         audioRef.current.currentTime = 0;
       }
 
-      // Create new audio instance
-      const audio = new Audio(process.env.PUBLIC_URL + '/music.mp3');
+      // Create new audio instance - simple path for deployment
+      const audio = new Audio('/music.mp3');
       audioRef.current = audio;
 
-      audio.currentTime = 4; // Skip first 4 seconds
-      audio.volume = 0.5; // Set volume to 50%
-      audio.play().catch(error => {
-        console.log('Could not play music:', error);
+      // Wait for audio to load before setting currentTime
+      audio.addEventListener('canplaythrough', () => {
+        audio.currentTime = 4; // Skip first 4 seconds
+        audio.volume = 0.5; // Set volume to 50%
+        audio.play().catch(error => {
+          console.log('Could not play music:', error);
+        });
       });
+
+      audio.addEventListener('error', (e) => {
+        console.log('Audio loading error:', e);
+      });
+
+      audio.load();
     } catch (error) {
       console.log('Error creating audio:', error);
     }
