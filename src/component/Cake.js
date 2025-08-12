@@ -380,7 +380,7 @@ export default function Cake() {
               <div className="celebration-content">
                 <h2>🎉 Chúc Mừng Sinh Nhật! 🎂</h2>
                 <p className="confetti">🎊 🎈 🎁 🌟 ✨</p>
-                <p>Chúc Linh Mẩu tuổi mới nhiều sức khỏe, hạnh phúc và thành công!</p>
+                <p>Chúc Mẩu tuổi mới nhiều sức khỏe, hạnh phúc và thành công!</p>
                 <p>Mong tất cả những ước mơ của cậu sẽ trở thành hiện thực! 💫</p>
                 <p className="click-hint">Nhấn vào đây để đóng</p>
               </div>
