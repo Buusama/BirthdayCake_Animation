@@ -382,7 +382,7 @@ export default function Cake() {
                 <p className="confetti">🎊 🎈 🎁 🌟 ✨</p>
                 <p>Chúc Mẩu tuổi mới nhiều sức khỏe, hạnh phúc và thành công!</p>
                 <p>Mong tất cả những ước mơ của cậu sẽ trở thành hiện thực! 💫</p>
-                <p className="click-hint">Nhấn vào đây để đóng</p>
+                <p className="click-hint">Han đẹp trai</p>
               </div>
             </motion.div>
           )}
