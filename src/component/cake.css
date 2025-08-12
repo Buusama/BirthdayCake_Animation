@@ -569,7 +569,8 @@ body::after {
   cursor: pointer;
   box-shadow: 0 5px 15px rgba(238, 90, 36, 0.4);
   transition: all 0.3s ease;
-  margin-top: 20px;
+  margin: 20px auto;
+  display: block;
   z-index: 10;
 }
 
