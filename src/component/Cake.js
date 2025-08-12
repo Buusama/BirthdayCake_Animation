@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import '../component/cake.css';
 
@@ -7,6 +7,7 @@ export default function Cake() {
   const [blowing, setBlowing] = useState(false);
   const [candlesOut, setCandlesOut] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [audioInitialized, setAudioInitialized] = useState(false);
   const audioRef = useRef(null);
 
   // Create calendar for August 2025
@@ -52,12 +53,87 @@ export default function Cake() {
     createCalendar();
   }, []);
 
+  // Initialize audio context on first user interaction (iOS fix)
+  const initializeAudio = useCallback(() => {
+    if (!audioInitialized) {
+      // Create a silent audio to unlock audio context on iOS
+      const silentAudio = new Audio();
+      silentAudio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+      silentAudio.play().then(() => {
+        setAudioInitialized(true);
+      }).catch(() => {
+        // Ignore errors for silent audio
+      });
+    }
+  }, [audioInitialized]);
+
+  // Function to play background music (skip first 4 seconds)
+  const playBackgroundMusic = useCallback(() => {
+    // Initialize audio if not done yet (for iOS)
+    if (!audioInitialized) {
+      initializeAudio();
+    }
+
+    try {
+      // Stop previous audio if it's playing
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+
+      // Create new audio instance - simple path for deployment
+      const audio = new Audio('/music.mp3');
+      audioRef.current = audio;
+
+      // Set properties immediately
+      audio.volume = 0.5; // Set volume to 50%
+      audio.preload = 'auto';
+
+      // For iOS compatibility - try to play immediately
+      const playPromise = () => {
+        return audio.play().then(() => {
+          // If successful, set the start time
+          audio.currentTime = 4; // Skip first 4 seconds
+        }).catch(error => {
+          console.log('Could not play music on first try:', error);
+
+          // For iOS - try again with user gesture simulation
+          setTimeout(() => {
+            audio.play().then(() => {
+              audio.currentTime = 4;
+            }).catch(err => {
+              console.log('Could not play music on second try:', err);
+            });
+          }, 100);
+        });
+      };
+
+      // Wait for audio to load
+      audio.addEventListener('canplaythrough', playPromise, { once: true });
+
+      // Fallback - try to play after a short delay even if not fully loaded
+      setTimeout(() => {
+        if (audio.readyState >= 2) { // HAVE_CURRENT_DATA
+          playPromise();
+        }
+      }, 200);
+
+      audio.addEventListener('error', (e) => {
+        console.log('Audio loading error:', e);
+      });
+
+      audio.load();
+    } catch (error) {
+      console.log('Error creating audio:', error);
+    }
+  }, [audioInitialized, initializeAudio]);
+
   // Play music when celebration shows
   useEffect(() => {
     if (showCelebration) {
       playBackgroundMusic();
     }
-  }, [showCelebration]);
+  }, [showCelebration, playBackgroundMusic]);
 
   // Cleanup audio on component unmount
   useEffect(() => {
@@ -72,13 +148,20 @@ export default function Cake() {
   // Microphone access and blow detection
   useEffect(() => {
     let isMounted = true;
+    let audioContext = null;
 
     navigator.mediaDevices
       .getUserMedia({ audio: true })
       .then((stream) => {
         if (!isMounted) return;
 
-        const audioContext = new AudioContext();
+        audioContext = new AudioContext();
+
+        // Resume AudioContext if it's suspended (important for iOS)
+        if (audioContext.state === 'suspended') {
+          audioContext.resume();
+        }
+
         const analyzer = audioContext.createAnalyser();
         const microphone = audioContext.createMediaStreamSource(stream);
         const scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
@@ -114,40 +197,11 @@ export default function Cake() {
 
     return () => {
       isMounted = false;
+      if (audioContext) {
+        audioContext.close();
+      }
     };
   }, [candlesOut]);
-
-  // Function to play background music (skip first 4 seconds)
-  const playBackgroundMusic = () => {
-    try {
-      // Stop previous audio if it's playing
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-
-      // Create new audio instance - simple path for deployment
-      const audio = new Audio('/music.mp3');
-      audioRef.current = audio;
-
-      // Wait for audio to load before setting currentTime
-      audio.addEventListener('canplaythrough', () => {
-        audio.currentTime = 4; // Skip first 4 seconds
-        audio.volume = 0.5; // Set volume to 50%
-        audio.play().catch(error => {
-          console.log('Could not play music:', error);
-        });
-      });
-
-      audio.addEventListener('error', (e) => {
-        console.log('Audio loading error:', e);
-      });
-
-      audio.load();
-    } catch (error) {
-      console.log('Error creating audio:', error);
-    }
-  };
 
   const resetCake = () => {
     // Stop music when resetting
@@ -163,11 +217,16 @@ export default function Cake() {
   };
 
   return (
-    <div className="cake-app">
+    <div className="cake-app" onClick={initializeAudio}>
       {/* Blow instruction */}
       {!candlesOut && (
         <div className="blow-instruction">
           <p>🎂 Thổi mạnh vào micro để tắt nến sinh nhật! 💨</p>
+          {!audioInitialized && (
+            <p style={{ fontSize: '12px', opacity: 0.7 }}>
+              (Nhấn vào màn hình để kích hoạt âm thanh trên iOS)
+            </p>
+          )}
         </div>
       )}
       {/* Reset button */}
@@ -269,7 +328,7 @@ export default function Cake() {
           <div className="celebration-content">
             <h2>🎉 Chúc Mừng Sinh Nhật! 🎂</h2>
             <p className="confetti">🎊 🎈 🎁 🌟 ✨</p>
-            <p>Chúc Linh Mẩu tuổi mới nhiều sức khỏe, hạnh phúc và thành công!</p>
+            <p>Chúc Mẩu tuổi mới nhiều sức khỏe, hạnh phúc và thành công!</p>
             <p>Mong tất cả những ước mơ của cậu sẽ trở thành hiện thực! 💫</p>
             <p className="click-hint">Nhấn vào đây để đóng</p>
           </div>
