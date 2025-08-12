@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import '../component/cake.css';
 
@@ -7,6 +7,7 @@ export default function Cake() {
   const [blowing, setBlowing] = useState(false);
   const [candlesOut, setCandlesOut] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const audioRef = useRef(null);
 
   // Create calendar for August 2025
   const createCalendar = () => {
@@ -49,6 +50,23 @@ export default function Cake() {
 
   useEffect(() => {
     createCalendar();
+  }, []);
+
+  // Play music when celebration shows
+  useEffect(() => {
+    if (showCelebration) {
+      playBackgroundMusic();
+    }
+  }, [showCelebration]);
+
+  // Cleanup audio on component unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
   }, []);
 
   // Microphone access and blow detection
@@ -99,7 +117,37 @@ export default function Cake() {
     };
   }, [candlesOut]);
 
+  // Function to play background music (skip first 4 seconds)
+  const playBackgroundMusic = () => {
+    try {
+      // Stop previous audio if it's playing
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+
+      // Create new audio instance
+      const audio = new Audio('/music.mp3');
+      audioRef.current = audio;
+
+      audio.currentTime = 4; // Skip first 4 seconds
+      audio.volume = 0.5; // Set volume to 50%
+      audio.play().catch(error => {
+        console.log('Could not play music:', error);
+      });
+    } catch (error) {
+      console.log('Error creating audio:', error);
+    }
+  };
+
   const resetCake = () => {
+    // Stop music when resetting
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+    }
+
     setCandlesOut(false);
     setShowCelebration(false);
     setBlowing(false);
